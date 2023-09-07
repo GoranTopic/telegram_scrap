@@ -17,6 +17,10 @@ const app_apiHash = process.env.API_HASH;
 // let get the phone number from the params passed
 const phone_number = process.argv[2];
 console.log('initilizing with phone: ', phone_number);
+if(!phone_number){
+    console.log('Please pass the phone number as a param');
+    process.exit(1);
+}
 
 
 // get slave session id from memory or not
@@ -59,8 +63,8 @@ Slavery({
 	console.log('scrapping cedula: ', cedula);
 	// query cedula
 	await client.sendMessage(cne_bot, { message: cedula });
-	// wait from 0 to 5 seconds
-	let seconds = Math.floor(Math.random() * 5);
+	// wait from 0 to 50 seconds
+	let seconds = Math.floor(Math.random() * 50);
 	console.log('waiting for: ', seconds, ' seconds');
 	await new Promise(r => setTimeout(r, seconds * 1000));
 	// get photo message
