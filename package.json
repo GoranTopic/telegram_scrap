@@ -7,6 +7,8 @@
 		"run": "node src/main.js",
 		"master": "node src/master.js",
 		"phone": "node src/phone.js",
+		"phones": "node src/phones.js",
+		"add": "node src/add_phone.js",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "",
