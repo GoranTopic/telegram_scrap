@@ -15,7 +15,7 @@ Slavery({
         console.log('Please enter a number from 01 - 24 or 30');
         process.exit(1);
     }
-    
+    // get cedulas path   
     const cedulas_path = `./storage/cedulas/cedulas_${cedulas_prefix}.txt`;
     // read cedulas
     let cedulas = fs.readFileSync(cedulas_path, "utf8").split("\n");
@@ -24,9 +24,10 @@ Slavery({
     let cedula_checklist = new Checklist(cedulas, { 
         name: `cedulas_${cedulas_prefix}`,
         path: './storage/checklists/',
-        save_every_check: 1, 
+        save_every_check: 50, 
     });
     console.log('checklist made');
+    console.log('awaiting slaves');
     // get new cedula
     let cedula = cedula_checklist.next();
     // loop on all cedulas
@@ -34,15 +35,16 @@ Slavery({
         // get idel slave
         let slave = await master.getIdle();
         // send cedula to slave
-        slave.run(cedula).then( image_buffer => {
-            console.log(`cedula ${cedula} recived!`);
-            // save image
-            fs.writeFileSync(`./storage/images/${cedula}.png`, image_buffer);
-            // check cedula off
-            cedula_checklist.check(cedula);
+        slave.run(cedula).then( is_success => {
+            if(is_success){
+                // check cedula off
+                cedula_checklist.check(cedula);
+                // print the state of the cheklist
+                console.log(`cedula ${cedula} checked, ${cedula_checklist.missingLeft()}/${cedula_checklist._values.length} left`);
+            }
             // get new cedula
             cedula = cedula_checklist.next();
-        });
-    }
+        })
+    };
 });
 

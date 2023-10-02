@@ -3,7 +3,6 @@ import { StringSession } from "telegram/sessions/index.js";
 import input from "input";
 import fs from "fs";
 import Checklist from "checklist-js";
-import Slavery from 'slvery-js';
 // dot env
 import dotenv from "dotenv";
 dotenv.config();
@@ -50,7 +49,6 @@ let cedula = cedula_checklist.next();
 console.log('cedula_checklist: ', cedula_checklist.next());
 
 while(true){
-
 	// query cedula
 	await client.sendMessage("Cneecuador_bot", { message: cedula });
 
