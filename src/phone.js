@@ -18,16 +18,17 @@ const app_apiHash = process.env.API_HASH;
 Slavery({
     numberOfSlaves: 1,
     port: 3000,
-    host: '192.168.50.132',
+    host: 'localhost', //'192.168.50.132',
 }).slave( {
     // this will set up tthe telegram client
     'telegram client setup': async (session_file, slave) => {
         // get slave session id from memory or not
         console.log('opeing session:', session_file);
         let session;
-        if(fs.existsSync(`./storage/sessions_ids/${session_file}`)){
+        if(fs.existsSync(`./storage/sessions/${session_file}`)){
             console.log(`Found session for ${session_file}`);
-            session = fs.readFileSync(`./storage/sessions_ids/${session_file}`, 'utf8');
+            session = fs.readFileSync(`./storage/sessions/${session_file}`, 'utf8');
+            slave.set('phone_session_file', session_file);
             slave.set('phone_session_id', session);
         }else{
             console.log(`No session found for ${session_file}`);
@@ -61,14 +62,15 @@ Slavery({
 
         console.log("saving telegram client...");
         // save the session key
-        fs.writeFileSync(`./storage/sessions_ids/${session_file}`,
+        fs.writeFileSync(`./storage/sessions/${session_file}`,
             client.session.save() // Save this string to avoid logging in again
         );
         return true;
     },
 
     'cedula': async (cedula, slave) => {
-        console.log('scrapping cedula: ', cedula);
+        let number = slave.get('phone_session_file');
+        console.log(`[${number}] is scrapping cedula: ${cedula}`);
         // get the client
         let client = slave.get('client');
         // query cedula
@@ -77,7 +79,7 @@ Slavery({
         let hasResponded = false;
         // seconds waited
         let seconds = 0;
-        console.log('waiting for cedula response');
+        console.log(`[${number}] waiting for response...`);
         while(!hasResponded){ // while sever has not responded
             // get last two messages
             let messages = await client.getMessages( cne_bot, { 
@@ -96,7 +98,7 @@ Slavery({
             }else if(messages[0].geo && messages[1].media){
                 // print newline
                 console.log('');
-                console.log('got image and geo');
+                console.log(`[${number}] got geo location and image`);
                 // download the photo
                 let image_buffer = await client.downloadMedia(messages[1], { progressCallback : console.log })
                 // get the geo location
@@ -105,7 +107,7 @@ Slavery({
                 delete geo_loc.accessHash
                 // save image
                 fs.writeFileSync(`./storage/images/${cedula}.png`, image_buffer);
-                console.log('geo_loc: ', geo_loc);
+                console.log(`[${number}] geo_loc: `, geo_loc);
                 // save geo loc js object
                 fs.writeFileSync(`./storage/geo_locs/${cedula}.json`, JSON.stringify(geo_loc));
                 // return true
@@ -113,7 +115,7 @@ Slavery({
             }else if(messages[0].media && messages[1].message === cedula){
                 // print newline
                 console.log('');
-                console.log('got only image');
+                console.log(`[${number}] got image`);
                 // download the photo
                 let image_buffer = await client.downloadMedia(messages[0], { progressCallback : console.log })
                 // save image
@@ -123,7 +125,7 @@ Slavery({
             }else if(messages[0].message === 'https://www.cne.gob.ec/miembros-de-las-juntas-receptoras-del-voto/'
                 && messages[1].message === 'Consulte los puntos habilitados donde puede capacitarse:' ){
                 console.log('');
-                console.log('got Designacion a la junta');
+                console.log(`[${number}] got Designacion a la junta`);
                 // get past two messages
                 let new_messages = await client.getMessages( cne_bot, { 
                     //filter: Api.InputMessagesFilterPhotos,
@@ -147,13 +149,13 @@ Slavery({
                 // return false
                 return { result: true, seconds: seconds };
             } else {
-                console.error('Something went wrong');
+                console.error(`[${number}] got unexpected response`);
                 console.log(messages[0].message);
                 // return false
                 return { result: false, seconds: seconds };
             }
             if(seconds > 30){
-                console.log('timeout');
+                console.log(`[${number}] waited for too long`);
                 return { result: false, seconds: seconds };
             }
         }

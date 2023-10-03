@@ -6,7 +6,7 @@ import ProxyRotator from 'proxy-rotator-js'
 // salve
 Slavery({
     port: 3000,
-    host: '192.168.50.132',
+    host: 'localhost', //'192.168.50.132',
     timeout: 1000 * 60 *10,
 }).master( async master => {
     // let cedulas path 
@@ -20,7 +20,7 @@ Slavery({
     // get cedulas path   
     const cedulas_path = `./storage/cedulas/cedulas_${cedulas_prefix}.txt`;
     // get all file in the sessions folder
-    let sessions_files = fs.readdirSync('./storage/sessions_ids/');
+    let sessions_files = fs.readdirSync('./storage/sessions/');
     let sessions = new ProxyRotator(sessions_files)
     // read cedulas
     let cedulas = fs.readFileSync(cedulas_path, "utf8").split("\n");

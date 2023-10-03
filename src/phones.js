@@ -26,9 +26,9 @@ Slavery({
         // get slave session id from memory or not
         console.log('opeing session:', session_file);
         let session;
-        if(fs.existsSync(`./storage/sessions_ids/${session_file}`)){
+        if(fs.existsSync(`./storage/sessions/${session_file}`)){
             console.log(`Found session for ${session_file}`);
-            session = fs.readFileSync(`./storage/sessions_ids/${session_file}`, 'utf8');
+            session = fs.readFileSync(`./storage/sessions/${session_file}`, 'utf8');
             slave.set('phone_session_id', session);
         }else{
             console.log(`No session found for ${session_file}`);
@@ -67,7 +67,7 @@ Slavery({
 
         console.log("saving telegram client...");
         // save the session key
-        fs.writeFileSync(`./storage/sessions_ids/${session_file}`,
+        fs.writeFileSync(`./storage/sessions/${session_file}`,
             client.session.save() // Save this string to avoid logging in again
         );
         return true;
