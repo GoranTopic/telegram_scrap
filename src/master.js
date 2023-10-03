@@ -47,18 +47,23 @@ Slavery({
             slave.run(cedula, 'cedula')
                 .then( ({result, seconds})  => {
                     console.log(`cedula returned ${result}`);
+                    console.log(`slave.time: ${slave.times}`);
                     if(result){ // result is true if cedula is valid
+                        // add one to 
                         cedula_checklist.check(cedula);
+                        slave.times++;
                         // print the state of the cheklist
                         console.log(`cedula ${cedula} checked, ${cedula_checklist._values.length}/${cedula_checklist.missingLeft()} left`);
                     }
-                    if(seconds > 5 || result === false){ // if seconds is greater than 5, 
+                    if(seconds > 5 || result === false || slave.times > 5){ // if seconds is greater than 5, 
+                        if(slave.times > 5) console.log('slave times is greater than 5');
                         // change sessions
                         let new_session = sessions.next().split(':')[0];
                         let old_session = slave.current_session;
                         sessions.resurect(old_session + ':undefined');
                         sessions.setDead(new_session + ':undefined');
                         slave.current_session = new_session;
+                        slave.times = 0;
                         slave.run(new_session, 'telegram client setup')
                             .catch( err => {
                                 console.log('error setting up session');
@@ -75,6 +80,7 @@ Slavery({
                     sessions.resurect(old_session + ':undefined');
                     sessions.setDead(new_session + ':undefined');
                     slave.current_session = new_session;
+                    slave.times = 0;
                     slave.run(new_session, 'telegram client setup')
                         .catch( err => {
                             console.log('error setting up session');
@@ -86,6 +92,7 @@ Slavery({
             let session = sessions.next().split(':')[0];
             sessions.setDead(session + ':undefined');
             slave.current_session = session;
+            slave.times = 0;
             slave.run(session, 'telegram client setup')
                 .catch( err => {;
                     console.log('error setting up session');

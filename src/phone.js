@@ -38,34 +38,39 @@ Slavery({
         // fill this later with the value from session.save()
         const stringSession = new StringSession(session); 
 
-        // make client
-        console.log("Making telegram client...");
-        const client = new TelegramClient(stringSession, app_apiId, app_apiHash, {
-            connectionRetries: 5,
-        });
+        try{
+            // make client
+            console.log("Making telegram client...");
+            const client = new TelegramClient(stringSession, app_apiId, app_apiHash, {
+                connectionRetries: 5,
+            });
 
-        let phone_number = session_file.split('.')[0];
-        // login with client
-        console.log("starting telegram client...");
+            let phone_number = session_file.split('.')[0];
+            // login with client
+            console.log("starting telegram client...");
 
-        await client.start({ 
-            phoneNumber: phone_number,
-            //password: async () => await input.text("Please enter your password: "),
-            phoneCode: async () => await input.text("Please enter the code you received: "),
-            onError: (err) => console.log(err),
-            timeout: 1000,
-        });
+            await client.start({ 
+                phoneNumber: phone_number,
+                //password: async () => await input.text("Please enter your password: "),
+                phoneCode: async () => await input.text("Please enter the code you received: "),
+                onError: (err) => console.log(err),
+                timeout: 1000,
+            });
 
-        console.log("storeing telegram client...");
-        //saving telegram client 
-        slave.set('client', client);
+            console.log("storeing telegram client...");
+            //saving telegram client 
+            slave.set('client', client);
 
-        console.log("saving telegram client...");
-        // save the session key
-        fs.writeFileSync(`./storage/sessions/${session_file}`,
-            client.session.save() // Save this string to avoid logging in again
-        );
-        return true;
+            console.log("saving telegram client...");
+            // save the session key
+            fs.writeFileSync(`./storage/sessions/${session_file}`,
+                client.session.save() // Save this string to avoid logging in again
+            );
+            return true;
+        } catch(err) {
+            console.error('Caught error:', err);
+            throw new Error('Error in telegram client setup');
+        }
     },
 
     'cedula': async (cedula, slave) => {
@@ -88,7 +93,7 @@ Slavery({
                 id: [1, 2], // get the last two messages
             })
             // wait for one second with set timeout
-            await new Promise(r => setTimeout(r, 1 * 1000));
+            await new Promise(r => setTimeout(r, 3 * 1000));
             // if the last message is the one we sent, then wait for a new message
             if(messages[0]?.message === cedula){
                 process.stdout.write('.');
