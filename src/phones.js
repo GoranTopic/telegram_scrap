@@ -19,7 +19,7 @@ const app_apiHash = process.env.API_HASH;
 Slavery({
     numberOfSlaves: 24,
     port: 3000,
-    host: 'localhost'
+    host: '192.168.50.132',
 }).slave( {
     // this will set up tthe telegram client
     'telegram client setup': async (session_file, slave) => {
@@ -47,14 +47,19 @@ Slavery({
         let phone_number = session_file.split('.')[0];
         // login with client
         console.log("starting telegram client...");
-
-        await client.start({ 
-            phoneNumber: phone_number,
-            //password: async () => await input.text("Please enter your password: "),
-            phoneCode: async () => await input.text("Please enter the code you received: "),
-            onError: (err) => console.log(err),
-            timeout: 1000,
-        });
+        
+        try{
+            await client.start({ 
+                phoneNumber: phone_number,
+                //password: async () => await input.text("Please enter your password: "),
+                phoneCode: async () => await input.text("Please enter the code you received: "),
+                onError: (err) => console.log(err),
+                timeout: 1000,
+            });
+        }catch(err){
+            console.log(err);
+            throw new Error('Error logging in');
+        }
 
         console.log("storeing telegram client...");
         //saving telegram client 

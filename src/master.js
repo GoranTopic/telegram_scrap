@@ -6,8 +6,8 @@ import ProxyRotator from 'proxy-rotator-js'
 // salve
 Slavery({
     port: 3000,
-    host: 'localhost',
-    timeout: 1000 * 60, // 1 minute
+    host: '192.168.50.132',
+    timeout: 1000 * 60 *10,
 }).master( async master => {
     // let cedulas path 
     let cedulas_prefix = process.argv[2];
@@ -29,6 +29,7 @@ Slavery({
     let cedula_checklist = new Checklist(cedulas, { 
         name: `cedulas_${cedulas_prefix}`,
         path: './storage/checklists/',
+        save_every_check: 100,
     });
     console.log('checklist made');
     console.log('awaiting slaves');
@@ -58,17 +59,38 @@ Slavery({
                         sessions.resurect(old_session + ':undefined');
                         sessions.setDead(new_session + ':undefined');
                         slave.current_session = new_session;
-                        slave.run(new_session, 'telegram client setup');
+                        slave.run(new_session, 'telegram client setup')
+                            .catch( err => {
+                                console.log('error setting up session');
+                                console.log(err);
+                            });
                     }
                     // get new cedula
                     cedula = cedula_checklist.next();
-                })
+                }).catch( err => {
+                    let old_session = slave.current_session;
+                    // change sessions
+                    let new_session = sessions.next().split(':')[0];
+                    let lold_session = slave.current_session;
+                    sessions.resurect(old_session + ':undefined');
+                    sessions.setDead(new_session + ':undefined');
+                    slave.current_session = new_session;
+                    slave.run(new_session, 'telegram client setup')
+                        .catch( err => {
+                            console.log('error setting up session');
+                            console.log(err);
+                        });
+                });
         }else{ // if slave has no session
             console.log('no session');
             let session = sessions.next().split(':')[0];
             sessions.setDead(session + ':undefined');
             slave.current_session = session;
-            slave.run(session, 'telegram client setup');
+            slave.run(session, 'telegram client setup')
+                .catch( err => {;
+                    console.log('error setting up session');
+                    console.log(err);
+                });
         };
     }
     // if no cedula left

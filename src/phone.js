@@ -18,7 +18,7 @@ const app_apiHash = process.env.API_HASH;
 Slavery({
     numberOfSlaves: 1,
     port: 3000,
-    host: 'localhost'
+    host: '192.168.50.132',
 }).slave( {
     // this will set up tthe telegram client
     'telegram client setup': async (session_file, slave) => {
