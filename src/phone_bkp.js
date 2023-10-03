@@ -16,61 +16,57 @@ const app_apiId = Number(process.env.API_ID);
 const app_apiHash = process.env.API_HASH;
 
 // let get the phone number from the params passed
-const number = process.argv[2];
-console.log('initilizing with phone: ', number);
-if(!number){
+const phone_number = process.argv[2];
+console.log('initilizing with phone: ', phone_number);
+if(!phone_number){
     console.log('Please pass the phone number as a param');
     process.exit(1);
 }
 
-let client = null;
-
-const connect_client = async () => {
-
-    let phone_session_id = '';
-    // get slave session id from memory or not
-    if(fs.existsSync(`./storage/sessions/${number}.session`)){
-        console.log(`Found session for ${number}`);
-        phone_session_id = fs.readFileSync(`./storage/sessions/${number}.session`, 'utf8');
-    }
-
-    // fill this later with the value from session.save()
-    const stringSession = new StringSession(phone_session_id); 
-
-    // make client
-    console.log("Making telegram client...");
-    client = new TelegramClient(stringSession, app_apiId, app_apiHash, {
-        connectionRetries: 5,
-    });
-
-    // login with client
-    await client.start({ 
-        phoneNumber: number,
-        //password: async () => await input.text("Please enter your password: "),
-        phoneCode: async () => await input.text("Please enter the code you received: "),
-        onError: (err) => console.log(err),
-    });
-
-    // you shoudl now be logged in
-    console.log("You should now be connected to", number);
-
-    // save the session key
-    fs.writeFileSync(`./storage/sessions/${number}.session`, 
-        client.session.save() // Save this string to avoid logging in again
-    );
+let phone_session_id = '';
+// get slave session id from memory or not
+if(fs.existsSync(`./storage/sessions_ids/${phone_number}.session`)){
+    console.log(`Found session for ${phone_number}`);
+    phone_session_id = fs.readFileSync(`./storage/sessions_ids/${phone_number}.session`, 'utf8');
 }
 
-await connect_client();
+// fill this later with the value from session.save()
+const stringSession = new StringSession(phone_session_id); 
 
+// make client
+console.log("Making telegram client...");
+const client = new TelegramClient(stringSession, app_apiId, app_apiHash, {
+	connectionRetries: 5,
+});
 
-let send_message_and_get_response = async cedula => {
-    console.log(`[${number}] scrapping cedula: `, cedula);
+// login with client
+await client.start({ 
+	phoneNumber: phone_number,
+	//password: async () => await input.text("Please enter your password: "),
+	phoneCode: async () => await input.text("Please enter the code you received: "),
+	onError: (err) => console.log(err),
+});
+
+// you shoudl now be logged in
+console.log("You should now be connected.");
+
+// save the session key
+fs.writeFileSync(`./storage/sessions_ids/${phone_number}.session`, 
+	client.session.save() // Save this string to avoid logging in again
+);
+
+// get the chat
+Slavery({
+    numberOfSlaves: 1,
+    port: 3000,
+    host: 'localhost'
+}).slave( async cedula => {
+    console.log('scrapping cedula: ', cedula);
     // query cedula
     await client.sendMessage(cne_bot, { message: cedula });
     // wait for response
     let hasResponded = false;
-    let seconds = 0;
-    console.log(`[${number}] waiting for cedula response`);
+    console.log('waiting for cedula response');
     while(!hasResponded){ // while sever has not responded
         // get last two messages
         let messages = await client.getMessages( cne_bot, { 
@@ -83,13 +79,12 @@ let send_message_and_get_response = async cedula => {
         // if the last message is the one we sent, then wait for a new message
         if(messages[0]?.message === cedula){
             process.stdout.write('.');
-            seconds++;
             hasResponded = false;
             //else if we got the geo location and image
         }else if(messages[0].geo && messages[1].media){
             // print newline
             console.log('');
-            console.log(`[${number}] got image and geo`);
+            console.log('got image and geo');
             // download the photo
             let image_buffer = await client.downloadMedia(messages[1], { progressCallback : console.log })
             // get the geo location
@@ -98,7 +93,7 @@ let send_message_and_get_response = async cedula => {
             delete geo_loc.accessHash
             // save image
             fs.writeFileSync(`./storage/images/${cedula}.png`, image_buffer);
-            console.log(`[${number}] geo_loc: `, geo_loc);
+            console.log('geo_loc: ', geo_loc);
             // save geo loc js object
             fs.writeFileSync(`./storage/geo_locs/${cedula}.json`, JSON.stringify(geo_loc));
             // return true
@@ -106,7 +101,7 @@ let send_message_and_get_response = async cedula => {
         }else if(messages[0].media && messages[1].message === cedula){
             // print newline
             console.log('');
-            console.log(`[${number}] got image only`);
+            console.log('got only image');
             // download the photo
             let image_buffer = await client.downloadMedia(messages[0], { progressCallback : console.log })
             // save image
@@ -116,56 +111,32 @@ let send_message_and_get_response = async cedula => {
         }else if(messages[0].message === 'https://www.cne.gob.ec/miembros-de-las-juntas-receptoras-del-voto/'
             && messages[1].message === 'Consulte los puntos habilitados donde puede capacitarse:' ){
             console.log('');
-            console.log(`[${number}] got Designacion a la junta`);
+            console.log('got Designacion a la junta');
             // get past two messages
             let new_messages = await client.getMessages( cne_bot, { 
                 //filter: Api.InputMessagesFilterPhotos,
                 limit: 4, // limit of two messages
                 id: [3, 4], // get the last two messages
             })   
-            console.log(`[${number}] new_messages: `, new_messages);
+            console.log(new_messages);
             // download the photo
             let image_buffer = await client.downloadMedia(new_messages[3], { progressCallback : console.log })
             // get the geo location
-            let geo_loc = new_messages[2]?.media?.geo
+            let geo_loc = new_messages[2].media.geo
             // delete the accessHash so that it can be serialized
-            if(geo_loc) delete geo_loc.accessHash
+            delete geo_loc.accessHash
             // save image
             fs.writeFileSync(`./storage/images/${cedula}.png`, image_buffer);
             // save geo loc js object
-            if(geo_loc) fs.writeFileSync(`./storage/geo_locs/${cedula}.json`, JSON.stringify(geo_loc));
+            fs.writeFileSync(`./storage/geo_locs/${cedula}.json`, JSON.stringify(geo_loc));
             // return true
             return true;
-        }else if(messages[0].message === 
-'La información de consulta de lugar de votación para ciudadanos que residen en el exterior estará disponible próximamente.' ) {
-            console.log('');
-            console.log(`[${number}] got extrangero`);
-            // return false
-            return false;
         } else {
-            console.error(`[${number}] got unknown response`);
+            console.error('Something went wrong');
             console.log(messages);
             // return false
             return false;
         }
-        if( seconds > 60 ){
-            console.log('');
-            console.log(`[${number}] timeout`);
-            console.log(`[${number}] rconnecting...`);
-            seconds = 0;
-            await connect_client();
-            return await send_message_and_get_response(cedula);
-        }
     }
-}
-
-
-// get the chat
-Slavery({
-    numberOfSlaves: 1,
-    port: 3000,
-    host: 'localhost'
-}).slave( async cedula => 
-    await send_message_and_get_response(cedula)
-);
+});
 
