@@ -2,6 +2,7 @@ import fs from "fs";
 import Checklist from "checklist-js";
 import Slavery from 'slavery-js';
 
+
 // salve
 Slavery({
     port: 3000,
@@ -24,7 +25,7 @@ Slavery({
     let cedula_checklist = new Checklist(cedulas, { 
         name: `cedulas_${cedulas_prefix}`,
         path: './storage/checklists/',
-        save_every_check: 50, 
+        save_every_check: 1000,
     });
     console.log('checklist made');
     console.log('awaiting slaves');

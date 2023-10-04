@@ -23,6 +23,14 @@ if(!number){
     process.exit(1);
 }
 
+let phone_session_id = '';
+// get slave session id from memory or not
+if(fs.existsSync(`./storage/sessions/${number}.session`)){
+    console.log(`Found session for ${number}`);
+    phone_session_id = fs.readFileSync(`./storage/sessions/${number}.session`, 'utf8');
+}
+
+
 let client = null;
 
 const connect_client = async () => {
@@ -60,12 +68,11 @@ const connect_client = async () => {
     );
 }
 
-await connect_client();
-
 
 let send_message_and_get_response = async cedula => {
     console.log(`[${number}] scrapping cedula: `, cedula);
     // query cedula
+    console.log(`[${number}] sending cedula to cne bot`);
     await client.sendMessage(cne_bot, { message: cedula });
     // wait for response
     let hasResponded = false;
@@ -159,13 +166,14 @@ let send_message_and_get_response = async cedula => {
     }
 }
 
+await connect_client();
 
 // get the chat
 Slavery({
     numberOfSlaves: 1,
     port: 3000,
     host: 'localhost'
-}).slave( async cedula => 
-    await send_message_and_get_response(cedula)
+}).slave(async cedula => 
+        await send_message_and_get_response(cedula)
 );
 
