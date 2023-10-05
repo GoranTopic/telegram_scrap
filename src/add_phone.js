@@ -6,6 +6,9 @@ import fs from 'fs';
 import dotenv from "dotenv";
 dotenv.config();
 
+// make directory struct,
+fs.mkdir('../storage/sessions', { recursive: true });
+
 // make api into a nuber
 const app_apiId = Number(process.env.API_ID);
 // get the api hash
