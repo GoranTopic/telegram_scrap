@@ -52,9 +52,11 @@ fs.writeFileSync(`./storage/sessions/${phone_number}.session`,
 	client.session.save() // Save this string to avoid logging in again
 );
 
+let cedula = '0701765596';
+
 const cne_bot = "Cneecuador_bot";
 // query cedula
-await client.sendMessage(cne_bot, { message: '0701765596' });
+await client.sendMessage(cne_bot, { message: cedula });
 // wait for response
 let hasResponded = false;
 // seconds waited
