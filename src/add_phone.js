@@ -54,7 +54,7 @@ fs.writeFileSync(`./storage/sessions/${phone_number}.session`,
 
 const cne_bot = "Cneecuador_bot";
 // query cedula
-await client.sendMessage(cne_bot, { message: cedula });
+await client.sendMessage(cne_bot, { message: '0701765596' });
 // wait for response
 let hasResponded = false;
 // seconds waited
