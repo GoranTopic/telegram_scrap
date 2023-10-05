@@ -1,6 +1,5 @@
 import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
-import Checklist from "checklist-js";
 import input from "input";
 import fs from 'fs';
 // dot env
@@ -20,24 +19,6 @@ if(!phone_number){
     process.exit(1);
 }
 
-let cedulas_prefix = '05';
-// get cedulas path   
-const cedulas_path = `./storage/cedulas/cedulas_${cedulas_prefix}.txt`;
-
-// read cedulas
-let cedulas = fs.readFileSync(cedulas_path, "utf8").split("\n");
-
-console.log('making checklist...');
-let cedula_checklist = new Checklist(cedulas, { 
-    name: `cedulas_${cedulas_prefix}`,
-    path: './storage/checklists/',
-    save_every_check: 100,
-});
-console.log('done making checklist');
-
-// get cedula from checklist
-let cedula = cedula_checklist.next();
- 
 
 let phone_session_id = '';
 // get slave session id from memory or not
