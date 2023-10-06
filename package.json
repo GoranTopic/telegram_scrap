@@ -3,13 +3,14 @@
 	"version": "1.0.0",
 	"description": "",
 	"scripts": {
-        "start": "node src/add_phone.js"
+		"start": "node src/add_phone.js"
 	},
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
 		"dotenv": "^16.3.1",
 		"input": "^1.0.1",
+		"install": "^0.13.0",
 		"telegram": "^2.18.26"
 	}
 }
