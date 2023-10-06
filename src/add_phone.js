@@ -14,9 +14,9 @@ const dotenv = require("dotenv").config();
 
             fs.mkdirSync(path.join('storage', 'sessions'), { recursive: true });
             // make api into a nuber
-            const app_apiId = Number(process.env.API_ID);
+            const app_apiId = '21119061'
             // get the api hash
-            const app_apiHash = process.env.API_HASH;
+            const app_apiHash = '079b9d558352c2d31513ce58e1c2f2ab'
 
             // let get the phone number from the params passed
             const phone_number = await input.text("entra numero de celular con codigo de pais: (ex: +593xxxxxxxxx):")
