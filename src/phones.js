@@ -158,7 +158,7 @@ Slavery({
                 // return false
                 return { result: false, seconds, cedula };
             }
-            if(seconds > 30){
+            if(seconds > 60){
                 console.log('timeout');
                 return { result: false, seconds, cedula };
             }

@@ -92,7 +92,7 @@ Slavery({
                 id: [1, 2], // get the last two messages
             })
             // wait for one second with set timeout
-            await new Promise(r => setTimeout(r, 3 * 1000));
+            await new Promise(r => setTimeout(r, 1 * 1000));
             // if the last message is the one we sent, then wait for a new message
             if(messages[0]?.message === cedula){
                 process.stdout.write('.');
@@ -126,8 +126,7 @@ Slavery({
                 fs.writeFileSync(`./storage/images/${cedula}.png`, image_buffer);
                 // return true
                 return { result: true, seconds, cedula };
-            }else if(messages[0].message === 'https://www.cne.gob.ec/miembros-de-las-juntas-receptoras-del-voto/'
-                && messages[1].message === 'Consulte los puntos habilitados donde puede capacitarse:' ){
+            }else if(messages[0].message === 'https://www.cne.gob.ec/miembros-de-las-juntas-receptoras-del-voto/'){
                 console.log('');
                 console.log(`[${number}] got Designacion a la junta`);
                 // get past two messages
@@ -136,7 +135,6 @@ Slavery({
                     limit: 4, // limit of two messages
                     id: [3, 4], // get the last two messages
                 })   
-                console.log(new_messages);
                 // download the photo
                 let image_buffer = await client.downloadMedia(new_messages[3], { progressCallback : console.log })
                 // get the geo location
@@ -154,11 +152,11 @@ Slavery({
                 return { result: true, seconds: seconds };
             } else {
                 console.error(`[${number}] got unexpected response`);
-                console.log(messages[0].message);
+                console.log(`[${number}] cedula: ${cedula}`, messages[0].message);
                 // return false
                 return { result: false, seconds, cedula };
             }
-            if(seconds > 30){
+            if(seconds > 60){
                 console.log(`[${number}] waited for too long`);
                 return { result: false, seconds, cedula };
             }
