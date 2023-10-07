@@ -21,7 +21,11 @@ Slavery({
     const cedulas_path = `./storage/cedulas/cedulas_${cedulas_prefix}.txt`;
     // get all file in the sessions folder
     let sessions_files = fs.readdirSync('./storage/sessions/');
-    let sessions = new Checklist(sessions_files, { recalc_on_check: true });
+    let sessions = new Checklist(sessions_files, { 
+        recalc_on_check: true,
+        shuffle: true,
+        save: false,
+    });
     // read cedulas
     let cedulas = fs.readFileSync(cedulas_path, "utf8").split("\n");
     // make checklist

@@ -14,7 +14,7 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"checklist-js": "^1.1.11",
+		"checklist-js": "^1.2.3",
 		"dotenv": "^16.3.1",
 		"input": "^1.0.1",
 		"node-telegram-bot-api": "^0.61.0",
