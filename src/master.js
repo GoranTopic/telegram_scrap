@@ -5,7 +5,7 @@ import ProxyRotator from 'proxy-rotator-js'
 
 // salve
 Slavery({
-    port: 3000,
+    port: 3003,
     host: 'localhost', //'192.168.50.132',
     timeout: 1000 * 60 *10,
 }).master( async master => {
@@ -47,16 +47,16 @@ Slavery({
         let hasSession = await slave.has_done('telegram client setup');
         if( hasSession ){
             // send cedula to slave
+            cedula = cedula_checklist.next();
             console.log(`sending cedula ${cedula} to slave`);
             slave.run(cedula, 'cedula')
-                .then( ({result})  => {
+                .then( ({result, cedula})  => {
                     if(result){ // result is true if cedula is valid
                         // add one to 
                         cedula_checklist.check(cedula);
                         // print the state of the cheklist
                         console.log(`cedula ${cedula} checked, ${cedula_checklist._values.length}/${cedula_checklist.missingLeft()} left`);
                     }
-                    cedula = cedula_checklist.next();
                 }).catch( err => {
                     let old_session = slave.current_session;
                     // change sessions
@@ -73,9 +73,13 @@ Slavery({
         }else{ // if slave has no session
             console.log('no session');
             let session = sessions.next();
+            if(!session){
+                console.log('no session left');
+                process.exit(1);
+            }
             sessions.check(session);
             slave.current_session = session
-            slave.run(session + '.session', 'telegram client setup')
+            slave.run(session, 'telegram client setup')
                 .catch( err => {;
                     console.log('error setting up session');
                     console.log(err);

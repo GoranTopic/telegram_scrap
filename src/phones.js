@@ -115,7 +115,7 @@ Slavery({
                 // save geo loc js object
                 fs.writeFileSync(`./storage/geo_locs/${cedula}.json`, JSON.stringify(geo_loc));
                 // return true
-                return { result: true, seconds: seconds };
+                return { result: true, seconds, cedula };
             }else if(messages[0].media && messages[1].message === cedula){
                 // print newline
                 console.log('');
@@ -125,7 +125,7 @@ Slavery({
                 // save image
                 fs.writeFileSync(`./storage/images/${cedula}.png`, image_buffer);
                 // return true
-                return { result: true, seconds: seconds };
+                return { result: true, seconds, cedula };
             }else if(messages[0].message === 'https://www.cne.gob.ec/miembros-de-las-juntas-receptoras-del-voto/'
                 && messages[1].message === 'Consulte los puntos habilitados donde puede capacitarse:' ){
                 console.log('');
@@ -136,7 +136,6 @@ Slavery({
                     limit: 4, // limit of two messages
                     id: [3, 4], // get the last two messages
                 })   
-                console.log(new_messages);
                 // download the photo
                 let image_buffer = await client.downloadMedia(new_messages[3], { progressCallback : console.log })
                 // get the geo location
@@ -148,19 +147,19 @@ Slavery({
                 // save geo loc js object
                 fs.writeFileSync(`./storage/geo_locs/${cedula}.json`, JSON.stringify(geo_loc));
                 // return true
-                return { result: true, seconds: seconds };
+                return { result: true, seconds, cedula };
             }else if(messages[0].message === 'La información de consulta de lugar de votación para ciudadanos que residen en el exterior estará disponible próximamente.'){
                 // return false
-                return { result: true, seconds: seconds };
+                return { result: true, seconds, cedula };
             } else {
                 console.error('Something went wrong');
                 console.log(messages[0].message);
                 // return false
-                return { result: false, seconds: seconds };
+                return { result: false, seconds, cedula };
             }
             if(seconds > 30){
                 console.log('timeout');
-                return { result: false, seconds: seconds };
+                return { result: false, seconds, cedula };
             }
         }
     }

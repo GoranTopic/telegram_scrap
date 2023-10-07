@@ -17,7 +17,7 @@ const app_apiHash = process.env.API_HASH;
 // get the chat
 Slavery({
     numberOfSlaves: 1,
-    port: 3000,
+    port: 3003,
     host: 'localhost', //'192.168.50.132',
 }).slave( {
     // this will set up tthe telegram client
@@ -31,8 +31,7 @@ Slavery({
             slave.set('phone_session_file', session_file.split('.')[0]);
             slave.set('phone_session_id', session);
         }else{
-            console.log(`No session found for ${session_file}`);
-            throw new Error('No session found');
+            throw new Error(`No session found for ${session_file}`);
         }
 
         // fill this later with the value from session.save()
@@ -116,7 +115,7 @@ Slavery({
                 // save geo loc js object
                 fs.writeFileSync(`./storage/geo_locs/${cedula}.json`, JSON.stringify(geo_loc));
                 // return true
-                return { result: true, seconds: seconds };
+                return { result: true, seconds, cedula };
             }else if(messages[0].media && messages[1].message === cedula){
                 // print newline
                 console.log('');
@@ -126,7 +125,7 @@ Slavery({
                 // save image
                 fs.writeFileSync(`./storage/images/${cedula}.png`, image_buffer);
                 // return true
-                return { result: true, seconds: seconds };
+                return { result: true, seconds, cedula };
             }else if(messages[0].message === 'https://www.cne.gob.ec/miembros-de-las-juntas-receptoras-del-voto/'
                 && messages[1].message === 'Consulte los puntos habilitados donde puede capacitarse:' ){
                 console.log('');
@@ -149,7 +148,7 @@ Slavery({
                 // save geo loc js object
                 fs.writeFileSync(`./storage/geo_locs/${cedula}.json`, JSON.stringify(geo_loc));
                 // return true
-                return { result: true, seconds: seconds };
+                return { result: true, seconds, cedula };
             }else if(messages[0].message === 'La información de consulta de lugar de votación para ciudadanos que residen en el exterior estará disponible próximamente.'){
                 // return false
                 return { result: true, seconds: seconds };
@@ -157,11 +156,11 @@ Slavery({
                 console.error(`[${number}] got unexpected response`);
                 console.log(messages[0].message);
                 // return false
-                return { result: false, seconds: seconds };
+                return { result: false, seconds, cedula };
             }
             if(seconds > 30){
                 console.log(`[${number}] waited for too long`);
-                return { result: false, seconds: seconds };
+                return { result: false, seconds, cedula };
             }
         }
     }
