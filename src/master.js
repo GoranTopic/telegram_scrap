@@ -23,6 +23,7 @@ Slavery({
     let sessions_files = fs.readdirSync('./storage/sessions/');
     let sessions = new Checklist(sessions_files, { 
         recalc_on_check: true,
+        enquque: false,
         shuffle: true,
         save: false,
     });
@@ -43,6 +44,8 @@ Slavery({
     let cedula = cedula_checklist.next();
     // loop on all cedulas
     while(cedula){
+        console.log('unused sessions:',sessions._missing_values.length)
+        console.log('used sessions:',sessions.valuesDone())
         // get idel slave
         let slave = await master.getIdle();
         // if slave has session

@@ -18,8 +18,8 @@ const app_apiHash = process.env.API_HASH;
 // get the chat
 Slavery({
     numberOfSlaves: 24,
-    port: 3000,
-    host: '192.168.50.132',
+    port: 3003,
+    host: 'localhost',
 }).slave( {
     // this will set up tthe telegram client
     'telegram client setup': async (session_file, slave) => {
@@ -29,6 +29,7 @@ Slavery({
         if(fs.existsSync(`./storage/sessions/${session_file}`)){
             console.log(`Found session for ${session_file}`);
             session = fs.readFileSync(`./storage/sessions/${session_file}`, 'utf8');
+            slave.set('phone_session_file', session_file.split('.')[0]);
             slave.set('phone_session_id', session);
         }else{
             console.log(`No session found for ${session_file}`);
@@ -74,7 +75,8 @@ Slavery({
     },
 
     'cedula': async (cedula, slave) => {
-        console.log('scrapping cedula: ', cedula);
+        let number = slave.get('phone_session_file');
+        console.log(`[${number}] scrapping cedula: `, cedula);
         // get the client
         let client = slave.get('client');
         // query cedula
@@ -83,7 +85,7 @@ Slavery({
         let hasResponded = false;
         // seconds waited
         let seconds = 0;
-        console.log('waiting for cedula response');
+        console.log(`[${number}] waiting for cedula response`);
         while(!hasResponded){ // while sever has not responded
             // get last two messages
             let messages = await client.getMessages( cne_bot, { 
@@ -102,7 +104,7 @@ Slavery({
             }else if(messages[0].geo && messages[1].media){
                 // print newline
                 console.log('');
-                console.log('got image and geo');
+                console.log(`[${number}] got image and geo`);
                 // download the photo
                 let image_buffer = await client.downloadMedia(messages[1], { progressCallback : console.log })
                 // get the geo location
@@ -111,7 +113,7 @@ Slavery({
                 delete geo_loc.accessHash
                 // save image
                 fs.writeFileSync(`./storage/images/${cedula}.png`, image_buffer);
-                console.log('geo_loc: ', geo_loc);
+                console.log(`[${number}] geo_loc: `, geo_loc);
                 // save geo loc js object
                 fs.writeFileSync(`./storage/geo_locs/${cedula}.json`, JSON.stringify(geo_loc));
                 // return true
@@ -119,17 +121,16 @@ Slavery({
             }else if(messages[0].media && messages[1].message === cedula){
                 // print newline
                 console.log('');
-                console.log('got only image');
+                console.log(`[${number}] got only image`);
                 // download the photo
                 let image_buffer = await client.downloadMedia(messages[0], { progressCallback : console.log })
                 // save image
                 fs.writeFileSync(`./storage/images/${cedula}.png`, image_buffer);
                 // return true
                 return { result: true, seconds, cedula };
-            }else if(messages[0].message === 'https://www.cne.gob.ec/miembros-de-las-juntas-receptoras-del-voto/'
-                && messages[1].message === 'Consulte los puntos habilitados donde puede capacitarse:' ){
+            }else if(messages[0].message === 'https://www.cne.gob.ec/miembros-de-las-juntas-receptoras-del-voto/' ){
                 console.log('');
-                console.log('got Designacion a la junta');
+                console.log(`[${number}] got Designacion a la junta`);
                 // get past two messages
                 let new_messages = await client.getMessages( cne_bot, { 
                     //filter: Api.InputMessagesFilterPhotos,
@@ -152,8 +153,8 @@ Slavery({
                 // return false
                 return { result: true, seconds, cedula };
             } else {
-                console.error('Something went wrong');
-                console.log(messages[0].message);
+                console.error(`[${number}] Something went wrong`);
+                console.log(`[${number}] cedula: ${cedula}`, messages[0].message);
                 // return false
                 return { result: false, seconds, cedula };
             }
