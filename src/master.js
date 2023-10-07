@@ -21,7 +21,7 @@ Slavery({
     const cedulas_path = `./storage/cedulas/cedulas_${cedulas_prefix}.txt`;
     // get all file in the sessions folder
     let sessions_files = fs.readdirSync('./storage/sessions/');
-    let sessions = new ProxyRotator(sessions_files)
+    let sessions = new Checklist(sessions_files, { recalc_on_check: true });
     // read cedulas
     let cedulas = fs.readFileSync(cedulas_path, "utf8").split("\n");
     // make checklist
@@ -45,42 +45,21 @@ Slavery({
             // send cedula to slave
             console.log(`sending cedula ${cedula} to slave`);
             slave.run(cedula, 'cedula')
-                .then( ({result, seconds})  => {
-                    console.log(`cedula returned ${result}`);
-                    console.log(`slave.time: ${slave.times}`);
+                .then( ({result})  => {
                     if(result){ // result is true if cedula is valid
                         // add one to 
                         cedula_checklist.check(cedula);
-                        slave.times++;
                         // print the state of the cheklist
                         console.log(`cedula ${cedula} checked, ${cedula_checklist._values.length}/${cedula_checklist.missingLeft()} left`);
                     }
-                    if(seconds > 5 || result === false || slave.times > 5){ // if seconds is greater than 5, 
-                        if(slave.times > 5) console.log('slave times is greater than 5');
-                        // change sessions
-                        let new_session = sessions.next().split(':')[0];
-                        let old_session = slave.current_session;
-                        sessions.resurect(old_session + ':undefined');
-                        sessions.setDead(new_session + ':undefined');
-                        slave.current_session = new_session;
-                        slave.times = 0;
-                        slave.run(new_session, 'telegram client setup')
-                            .catch( err => {
-                                console.log('error setting up session');
-                                console.log(err);
-                            });
-                    }
-                    // get new cedula
                     cedula = cedula_checklist.next();
                 }).catch( err => {
                     let old_session = slave.current_session;
                     // change sessions
-                    let new_session = sessions.next().split(':')[0];
-                    let lold_session = slave.current_session;
-                    sessions.resurect(old_session + ':undefined');
-                    sessions.setDead(new_session + ':undefined');
+                    let new_session = sessions.next()
+                    sessions.uncheck(old_session);
+                    sessions.check(new_session);
                     slave.current_session = new_session;
-                    slave.times = 0;
                     slave.run(new_session, 'telegram client setup')
                         .catch( err => {
                             console.log('error setting up session');
@@ -89,11 +68,10 @@ Slavery({
                 });
         }else{ // if slave has no session
             console.log('no session');
-            let session = sessions.next().split(':')[0];
-            sessions.setDead(session + ':undefined');
-            slave.current_session = session;
-            slave.times = 0;
-            slave.run(session, 'telegram client setup')
+            let session = sessions.next();
+            sessions.check(session);
+            slave.current_session = session
+            slave.run(session + '.session', 'telegram client setup')
                 .catch( err => {;
                     console.log('error setting up session');
                     console.log(err);

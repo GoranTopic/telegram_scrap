@@ -28,7 +28,7 @@ Slavery({
         if(fs.existsSync(`./storage/sessions/${session_file}`)){
             console.log(`Found session for ${session_file}`);
             session = fs.readFileSync(`./storage/sessions/${session_file}`, 'utf8');
-            slave.set('phone_session_file', session_file);
+            slave.set('phone_session_file', session_file.split('.')[0]);
             slave.set('phone_session_id', session);
         }else{
             console.log(`No session found for ${session_file}`);
