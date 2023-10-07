@@ -33,6 +33,8 @@ Slavery({
     let cedula_checklist = new Checklist(cedulas, { 
         name: `cedulas_${cedulas_prefix}`,
         path: './storage/checklists/',
+        enqueue: false,
+        recalc_on_check: false,
         save_every_check: 100,
     });
     console.log('checklist made');
@@ -52,6 +54,9 @@ Slavery({
             slave.run(cedula, 'cedula')
                 .then( ({result, cedula})  => {
                     if(result){ // result is true if cedula is valid
+                        if(cedula === undefined){
+                            throw new Error('cedula is undefined');
+                        }
                         // add one to 
                         cedula_checklist.check(cedula);
                         // print the state of the cheklist
