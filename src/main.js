@@ -1,68 +1,52 @@
-import { TelegramClient } from "telegram";
-import { StringSession } from "telegram/sessions/index.js";
-import input from "input";
-import fs from "fs";
-import Checklist from "checklist-js";
-import Slavery from 'slvery-js';
+import { chromium } from 'playwright';
+import captchaSolver from './captchan/captchas.io.js';
+
 // dot env
 import dotenv from "dotenv";
 dotenv.config();
 
-/* this is the test of the telegram help */
+// get the api for captchan solver
+const CAPTCHA_SOLVER_API_KEY = process.env.CAPTCHA_SOLVER_API_KEY;
 
-const apiHash = process.env.API_HASH;
+if(CAPTCHA_SOLVER_API_KEY === undefined)
+    throw new Error('CAPTCHA_SOLVER_API_KEY is not defined');
 
-// make api into a nuber
-const apiId = Number(process.env.API_ID);
-const stringSession = new StringSession("1AQAOMTQ5LjE1NC4xNzUuNTEBu4HugkJMM/D80NewrlGU/ZvoM6mb/Pa8T1VfHiu7StrHp4fNEXuhnkDLNMhP6vVnVcIU0vqTSErGJGk6IN4JTEEu3z4CklItzc2d3rDqTAuUOkA/Xm+dlrCrKGAJI5tsypAf2SEoTmwxubbLp+SPKjPfr77f+H0qINzNNM9TLRe6mUrqcYTWmO7QbzSgkVHV7mBIiOgogirCiJR65hyy7acGxQYPPlWyBjo1+TfP3JqeWYdwd9/1hILkhXXKokgjsorslgWwjQpyk+IlgitegitdbMs6DABq1CEEPTmqQXMwgmWgyt37GMpME9Pbu6KUAyiyndgMdPNEWm6UN27D+uM="); // fill this later with the value from session.save()
+// target domain
+let domain = 'https://lugarvotacion.cne.gob.ec/';
+let cedula = '0916576796';
+let dob = '12/11/1992';
 
-// let cedulas path 
-const cedulas_path = "./storage/cedulas/cedulas_09.txt";
-
-// read cedulas
-let cedulas = fs.readFileSync(cedulas_path, "utf8").split("\n");
-
-// make checklist
-console.log('making checklist...');
-let cedula_checklist = new Checklist(cedulas);
-console.log('checklist made!');
-
-// make client
-console.log("Loading interactive example...");
-const client = new TelegramClient(stringSession, apiId, apiHash, {
-	connectionRetries: 5,
-});
-	
-await client.start({ 
-	phoneNumber: async () => await input.text("Please enter your number: "),
-	password: async () => await input.text("Please enter your password: "),
-	phoneCode: async () =>
-	await input.text("Please enter the code you received: "),
-	onError: (err) => console.log(err),
+const browser = await chromium.launch({
+    headless: false,
 });
 
-console.log("You should now be connected."); // save the session key
-new StringSession( client.session.save() ); // Save this string to avoid logging in again
+// open a new page
+const page = await browser.newPage();
+// go to the domain
+page.goto(domain);
+// wait for the page to load
+await page.waitForSelector('iframe');
+console.log('recaptcha loaded');
+// write cedula
+await page.fill('#mat-input-0', cedula);
+// write dob
+await page.fill('#mat-input-1', dob);
+// await for captcha to be solved
+let isSolved = await captchaSolver(page, CAPTCHA_SOLVER_API_KEY);
+// click on the button with class mat-raised-button mat-primary
+if(isSolved) console.log('captcha solved');
 
 
-// get new cedula
-let cedula = cedula_checklist.next();
-console.log('cedula_checklist: ', cedula_checklist.next());
+/*
+// click on the button
+console.log('captcha solved');
+await page.getByText('Consulta')[1].click();
 
-while(true){
 
-	// query cedula
-	await client.sendMessage("Cneecuador_bot", { message: cedula });
+// wait for the page idle 
+await page.waitForLoadState('networkidle');
 
-	// check cedula off
-	cedula_checklist.check(cedula);
-
-	// waiting for a random second between 5 to 10 seconds
-	let seconds = Math.floor(Math.random() * 5) + 5;
-	console.log('waiting for: ', seconds, ' seconds');
-	await new Promise(r => setTimeout(r, seconds * 1000));
-
-	// get new cedula
-	cedula = cedula_checklist.next();
-}
-
+// get result
+let result = await page.$('.swal2-content');
+console.log(await result.innerText());
+*/
