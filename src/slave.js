@@ -6,7 +6,7 @@ let endpoint = 'https://lugarvotacion.cne.gob.ec/CneApiWs/api/ConsultaVotacionDo
 
 // get the chat
 Slavery({
-    numberOfSlaves: 100,
+    numberOfSlaves: 200,
     port: 3000,
     host: 'localhost'
 }).slave( async ({proxy, cedula, token, userAgent}) => {

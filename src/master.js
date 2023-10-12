@@ -13,10 +13,10 @@ Slavery({
     port: 3000,
 }).master( async master => {
 
-    let cedulas_prefix = process.argv[2];
+    let cedula_prefix = process.argv[2];
     // let get the phone number from the params passed
-    console.log('reading cedulas starting with: ', cedulas_prefix);
-    if(!cedulas_prefix){
+    console.log('reading cedulas starting with: ', cedula_prefix);
+    if(!cedula_prefix){
         console.log('Please enter a number from 01 - 24 or 30');
         process.exit(1);
     }
