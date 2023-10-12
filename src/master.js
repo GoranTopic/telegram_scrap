@@ -6,7 +6,6 @@ import Storage from 'storing-me'
 import RandomUserAgent from 'random-useragent';
 import Slavery from 'slavery-js';
 
-
 // salve
 Slavery({
     host: 'localhost',
@@ -39,7 +38,7 @@ Slavery({
     console.log('making storage...');
     let storage = new Storage({ 
         type: 'json',
-        storagePath: `./storage/records/`,
+        path: `./storage/records/`,
         keyValue: true,
     });
     let store = await storage.open(`records_${cedula_prefix}`);
@@ -51,7 +50,7 @@ Slavery({
         path: './storage/checklists/',
         enqueue: false,
         recalc_on_check: false,
-        save_every_check: 1,
+        save_every_check: 1000,
     });
     console.log('checklist done');
 
