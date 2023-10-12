@@ -1,42 +1,39 @@
 import Slavery from 'slavery-js';
-import puppeteer from 'puppeteer-core';
-import fs from 'fs';
+import axios from 'axios';
 
-// dot env
-import dotenv from "dotenv";
-dotenv.config();
-
-// target domain
-let domain = 'https://lugarvotacion.cne.gob.ec/';
-
-// get the api for captchan solver
-const captchanio = process.env.API_KEY
+// get the endpoint
+let endpoint = 'https://lugarvotacion.cne.gob.ec/CneApiWs/api/ConsultaVotacionDomicilioElectoral2021'
 
 // get the chat
 Slavery({
-    numberOfSlaves: 1,
+    numberOfSlaves: 100,
     port: 3000,
     host: 'localhost'
-}).slave({ 
-    'login': async (proxy, slave) => {
-        console.log('opening browser with proxy');
-        // make the browser
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
-        // go to the domain
-        page.goto(domain);
-        // save page
-        slave['page'] = page;
-        // query cedula
-        return true;
-    },
-    'query_cedula': async (cedula, slave) => {
-        // get the page
-        const page = slave['page'];
-        //
-        await page.type('.search-box__input', 'automate beyond recorder');
-
-        return buffer;
+}).slave( async ({proxy, cedula, token, userAgent}) => {
+    let response;
+    try {
+        response = await axios.post(endpoint, {
+            "cedula": cedula.cedula,
+            "nombre": cedula.dob,
+            "ip": proxy.ip,
+            "recaptcharesponse": token,
+            headers: {
+                'User-Agent': userAgent
+            }
+        }, {
+            proxy: {
+                host: proxy.ip, 
+                port: proxy.port,
+                protocol: 'http'
+            }
+        });
+        console.log(`[${proxy.ip}][${cedula.cedula}] querying...${response.status}`);
+        return response.data;
+    } catch (e) {
+        // if error is 403
+        if (e.response.status === 403 ) 
+            console.log(`[${proxy.ip}][${cedula.cedula}] querying...${e.response.status}`);
+        throw e;
     }
 });
 

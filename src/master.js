@@ -1,50 +1,76 @@
-import fs from "fs";
+import proxyRotator from 'proxy-rotator-js';
 import Checklist from "checklist-js";
+import fs from 'fs';
+import generateToken from './utils/generateToken.js';
+import Storage from 'storing-me'
+import RandomUserAgent from 'random-useragent';
 import Slavery from 'slavery-js';
-import ProxyRotator from 'proxy-rotator-js'
+
+// target domain
+let cedula_prefix = '01';
 
 // salve
 Slavery({
-    port: 3000,
     host: 'localhost',
+    port: 3000,
 }).master( async master => {
-    // let cedulas path 
-    let cedulas_prefix = process.argv[2];
-    let proxies = new ProxyRotator( './storage/proxies/proxyscrape_premium_http_proxies.txt');
-    // let get the phone number from the params passed
-    if(!cedulas_prefix){
-        console.log('Please enter a number from 01 - 24 or 30');
-        process.exit(1);
-    }
-    // let get the cedulas path
-    const cedulas_path = `./storage/cedulas/cedulas_${cedulas_prefix}.txt`;
-    // read cedulas
-    let cedulas = fs.readFileSync(cedulas_path, "utf8").split("\n");
-    // make checklist
-    console.log('making checklist...');
-    let cedula_checklist = new Checklist(cedulas, { 
-        name: `cedulas_${cedulas_prefix}`,
-        path: './storage/checklists/',
-        save_every_check: 100, 
+
+    // get proxies
+    let proxies = new proxyRotator('./storage/proxies/proxyscrape_premium_http_proxies.txt', {
+        returnAs: 'object',
     });
-    console.log('checklist made');
-    // get new cedula
+
+    // read lines from and format it 
+    let cedulas_dob = fs
+        .readFileSync(`./storage/cedulas/cedula_dob_${cedula_prefix}.txt`, 'utf8')
+        .split('\n')
+        .map(cedula => ({ cedula: cedula.split(',')[0], dob: cedula.split(',')[1] }));
+
+    // traslat date of birth to format DD/MM/YYYY from 1938-06-14T00:00:00.000000000Z
+    cedulas_dob = cedulas_dob
+        .map(cedula => ({ cedula: cedula.cedula, dob: cedula.dob.split('T')[0].split('-').reverse().join('') }));
+
+    console.log('making storage...');
+    let storage = new Storage({ 
+        type: 'json',
+        storagePath: `./storage/records/`,
+        keyValue: true,
+    });
+    let store = await storage.open(`records_${cedula_prefix}`);
+    console.log('storage done');
+
+    console.log('making checklist...');
+    let cedula_checklist = new Checklist(cedulas_dob, { 
+        name: `cedulas_dob_${cedula_prefix}`,
+        path: './storage/checklists/',
+        enqueue: false,
+        recalc_on_check: false,
+        save_every_check: 1,
+    });
+    console.log('checklist done');
+
+    let proxy = proxies.next();
     let cedula = cedula_checklist.next();
-    let proxy = await proxies.next();
-    // loop on all cedulas
-    while(cedula){
-        // get idel slave
+    let token = generateToken();
+    let userAgent = RandomUserAgent.getRandom();
+
+    while(cedula) {
+        console.log(`awaiting for slave...`);
         let slave = await master.getIdle();
         // send cedula to slave
-        slave.run({proxy, cedula})
-            .then( result => {
-            console.log(`cedula ${cedula} done`);
-            console.log(result);
-            // check cedula off
-            cedula_checklist.check(cedula);
-            // get new cedula
-            cedula = cedula_checklist.next();
-        });
+        slave.run({proxy, cedula, token, userAgent})
+            .then( async result => {
+                await store.push(cedula.cedula, result);
+                cedula_checklist.check(cedula);
+                console.log(`cedula ${cedula.cedula} checked. ${cedula_checklist.valuesCount()}/${cedula_checklist._missing_values.length} `);
+            }).catch( error => {
+                console.log(`[${proxy.ip}][${cedula.cedula}] error`);
+            })
+        // update variables
+        proxy = proxies.next();
+        cedula = cedula_checklist.next();
+        token = generateToken();
+        userAgent = RandomUserAgent.getRandom();
     }
 });
 
