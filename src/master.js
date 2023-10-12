@@ -6,14 +6,20 @@ import Storage from 'storing-me'
 import RandomUserAgent from 'random-useragent';
 import Slavery from 'slavery-js';
 
-// target domain
-let cedula_prefix = '01';
 
 // salve
 Slavery({
     host: 'localhost',
     port: 3000,
 }).master( async master => {
+
+    let cedulas_prefix = process.argv[2];
+    // let get the phone number from the params passed
+    console.log('reading cedulas starting with: ', cedulas_prefix);
+    if(!cedulas_prefix){
+        console.log('Please enter a number from 01 - 24 or 30');
+        process.exit(1);
+    }
 
     // get proxies
     let proxies = new proxyRotator('./storage/proxies/proxyscrape_premium_http_proxies.txt', {
