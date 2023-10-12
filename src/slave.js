@@ -28,7 +28,7 @@ Slavery({
             }
         });
         console.log(`[${proxy.ip}][${cedula.cedula}] querying...${response.status}`);
-        return response.data;
+        return { result: response.data, proxy, cedula };
     } catch (e) {
         // if error is 403
         if (e.response.status === 403 ) 

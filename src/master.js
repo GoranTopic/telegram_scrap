@@ -64,7 +64,7 @@ Slavery({
         let slave = await master.getIdle();
         // send cedula to slave
         slave.run({proxy, cedula, token, userAgent})
-            .then( async result => {
+            .then( async ({result, cedula, proxy}) => {
                 await store.push(cedula.cedula, result);
                 cedula_checklist.check(cedula);
                 console.log(`cedula ${cedula.cedula} checked. ${cedula_checklist.valuesCount()}/${cedula_checklist._missing_values.length} `);
