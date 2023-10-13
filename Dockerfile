@@ -16,4 +16,5 @@ COPY . .
 VOLUME storage
 
 EXPOSE 3030
+
 CMD [ "npm", "run", "start" ]
