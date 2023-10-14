@@ -21,7 +21,10 @@ if(!cedula_prefix){
 let cedulas_dob = fs
     .readFileSync(`./storage/cedulas/cedula_dob_${cedula_prefix}.txt`, 'utf8')
     .split('\n')
-    .map(cedula => ({ cedula: cedula.split(',')[0], dob: cedula.split(',')[1] }));
+    // remove any undefined cedula
+    .filter(cedula => cedula.cedula !== undefined)
+    .filter(cedula => cedula.cedula !== null)
+    .map(cedula => ({ cedula: cedula.split(',')[0], dob: cedula.split(',')[1] }))
 
 // traslat date of birth to format DD/MM/YYYY from 1938-06-14T00:00:00.000000000Z
 cedulas_dob = cedulas_dob
