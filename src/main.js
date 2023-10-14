@@ -1,4 +1,3 @@
-import proxyRotator from 'proxy-rotator-js';
 import Checklist from "checklist-js";
 import fs from 'fs';
 import axios from 'axios';
@@ -17,11 +16,6 @@ if(!cedula_prefix){
     console.log('Please enter a number from 01 - 24 or 30');
     process.exit(1);
 }
-
-// get proxies
-let proxies = new proxyRotator('./storage/proxies/proxyscrape_premium_http_proxies.txt', {
-    returnAs: 'object',
-});
 
 // read lines from and format it 
 let cedulas_dob = fs
@@ -61,22 +55,20 @@ let interval = setInterval(() => {
         return;
     }
     // get the next proxy and cedula to check
-    let proxy = proxies.next();
     let cedula = cedula_checklist.next();
     let token = generateToken();
     let userAgent = RandomUserAgent.getRandom();
     // make the request
-    make_request(proxy, cedula, token, userAgent);
+    make_request(cedula, token, userAgent);
 
 }, 0.1);
 
 
-let make_request = (proxy, cedula, token, userAgent) => 
+let make_request = (cedula, token, userAgent) => 
     // make the request
     axios.post(endpoint, {
         "cedula": cedula.cedula,
         "nombre": cedula.dob,
-        "ip": proxy.ip,
         "recaptcharesponse": token,
         headers: {
             'User-Agent': userAgent
@@ -93,8 +85,8 @@ let make_request = (proxy, cedula, token, userAgent) =>
         console.log(`cedula ${cedula.cedula} checked. ${cedula_checklist.valuesCount()}/${cedula_checklist._missing_values.length} `);
     }).catch( error => {
         if (error.response.status === 403 ) 
-            console.log(`[${proxy.ip}][${cedula.cedula}] querying...${error.response.status}`);
+            console.log(`[${cedula.cedula}] querying...${error.response.status}`);
         else 
-            console.log(`[${proxy.ip}][${cedula.cedula}] error`);
+            console.log(`[${cedula.cedula}] error`);
     })
 
