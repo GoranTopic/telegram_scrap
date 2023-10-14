@@ -73,12 +73,6 @@ let make_request = (cedula, token, userAgent) =>
         headers: {
             'User-Agent': userAgent
         }
-    }, {
-        proxy: {
-            host: proxy.ip, 
-            port: proxy.port,
-            protocol: 'http'
-        }
     }).then( async result  => {
         await store.push(cedula.cedula, result.data);
         cedula_checklist.check(cedula);
