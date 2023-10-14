@@ -64,7 +64,7 @@ let interval = setInterval(() => {
     // make the request
     make_request(cedula, token, userAgent);
 
-}, 0.1);
+}, 0.01);
 
 
 let make_request = (cedula, token, userAgent) => 
