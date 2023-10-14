@@ -67,6 +67,7 @@ let interval = setInterval(() => {
     let userAgent = RandomUserAgent.getRandom();
     // make the request
     make_request(proxy, cedula, token, userAgent);
+
 }, 0.1);
 
 
@@ -87,7 +88,7 @@ let make_request = (proxy, cedula, token, userAgent) =>
             protocol: 'http'
         }
     }).then( async result  => {
-        await store.push(cedula.cedula, result);
+        await store.push(cedula.cedula, result.data);
         cedula_checklist.check(cedula);
         console.log(`cedula ${cedula.cedula} checked. ${cedula_checklist.valuesCount()}/${cedula_checklist._missing_values.length} `);
     }).catch( error => {
