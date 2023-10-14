@@ -49,15 +49,16 @@ console.log('checklist done');
 // set intevale to make requests every 1 second
 let interval = setInterval(() => {
     // check if all cedulas have been checked
-    if (cedula_checklist.isDone()) {
-        console.log('all cedulas checked');
-        clearInterval(interval);
-        return;
-    }
     // get the next proxy and cedula to check
     let cedula = cedula_checklist.next();
     let token = generateToken();
     let userAgent = RandomUserAgent.getRandom();
+    if (!cedula?.cedula) {
+        console.log('all cedulas checked');
+        clearInterval(interval);
+        return;
+    }
+
     // make the request
     make_request(cedula, token, userAgent);
 
