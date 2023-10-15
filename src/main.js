@@ -8,7 +8,6 @@ import RandomUserAgent from 'random-useragent';
 // get the endpoint
 let endpoint = 'https://lugarvotacion.cne.gob.ec/CneApiWs/api/ConsultaVotacionDomicilioElectoral2021'
 
-
 let cedula_prefix = process.argv[2];
 // let get the phone number from the params passed
 console.log('reading cedulas starting with: ', cedula_prefix);
@@ -17,17 +16,23 @@ if(!cedula_prefix){
     process.exit(1);
 }
 
+//if there is a file with the cedulas, read it
+let cedulas_dob = [];
+if (!fs.existsSync(`./storage/cedulas/cedula_dob_${cedula_prefix}.txt`)) {
+    console.log('cedula file not found');
+    throw new Error('cedula file not found');
+}
 // read lines from and format it 
-let cedulas_dob = fs
+cedulas_dob = fs
     .readFileSync(`./storage/cedulas/cedula_dob_${cedula_prefix}.txt`, 'utf8')
     .split('\n')
-    // remove any undefined cedula
+// remove any undefined cedula
     .filter(cedula => cedula)
     .map(cedula => ({ cedula: cedula.split(',')[0], dob: cedula.split(',')[1] }))
-
 // traslat date of birth to format DD/MM/YYYY from 1938-06-14T00:00:00.000000000Z
-cedulas_dob = cedulas_dob
     .map(cedula => ({ cedula: cedula.cedula, dob: cedula.dob.split('T')[0].split('-').reverse().join('') }));
+
+console.log(`cedulas in cedula_dob_${cedula_prefix}.txt: `, cedulas_dob.length);
 
 console.log('making storage...');
 let storage = new Storage({ 
@@ -38,6 +43,16 @@ let storage = new Storage({
 let store = await storage.open(`records_${cedula_prefix}`);
 console.log('storage done');
 
+// make a map of the stored values as keys, to quickly check if a cedula has been checked
+let storedValues = ( await store.all() ).map(cedula => cedula.key);
+console.log('cedulas found in storage: ', storedValues.length);
+let storedMap = {};
+storedValues.forEach(cedula => storedMap[cedula] = true);
+
+// get the cedulas that have not been checked
+cedulas_dob = cedulas_dob.filter(cedula => !storedMap[cedula.cedula]);
+console.log('cedulas to checked: ', cedulas_dob.length);
+
 console.log('making checklist...');
 let cedula_checklist = new Checklist(cedulas_dob, { 
     name: `cedulas_dob_${cedula_prefix}`,
@@ -45,8 +60,10 @@ let cedula_checklist = new Checklist(cedulas_dob, {
     enqueue: false,
     recalc_on_check: false,
     save_every_check: 1,
+    save: false,
 });
 console.log('checklist done');
+
 
 // set intevale to make requests every 1 second
 let interval = setInterval(() => {
@@ -81,9 +98,8 @@ let make_request = (cedula, token, userAgent) =>
         cedula_checklist.check(cedula);
         console.log(`cedula ${cedula.cedula} checked. ${cedula_checklist.valuesCount()}/${cedula_checklist._missing_values.length} `);
     }).catch( error => {
-        if (error.response.status === 403 ) 
+        if (error?.response?.status === 403 ) 
             console.log(`[${cedula.cedula}] querying...${error.response.status}`);
         else 
             console.log(`[${cedula.cedula}] error`);
     })
-
